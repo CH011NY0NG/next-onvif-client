@@ -1,5 +1,5 @@
 {
-  "name": "next-onvif-test",
+  "name": "next-onvif-client",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,18 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "next": "15.0.2",
+    "onvif": "^0.8.0",
     "react": "19.0.0-rc-02c0e824-20241028",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
-    "next": "15.0.2"
+    "react-icons": "^5.3.0",
+    "rtsp-ffmpeg": "^0.0.19",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
+    "@types/node": "^20.17.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "15.0.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "15.0.2"
+    "typescript": "^5"
   }
 }
