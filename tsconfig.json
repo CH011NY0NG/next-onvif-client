@@ -29,7 +29,9 @@
     ".next/types/**/*.ts",
     "@types",
     "src/app/api/stream/route.ts.disabled",
-    "src/app/api/discover/route.ts"
-, "src/lib/onvif.ts.disabled"  ],
+    "src/app/api/discover/route.ts",
+    "src/lib/onvif.ts.disabled",
+    "src/components/DeviceList.tsx.swp"
+  ],
   "exclude": ["node_modules"]
 }

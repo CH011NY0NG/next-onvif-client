@@ -1,60 +1,58 @@
 "use client";
 
 import React from "react";
-import { StreamViewer } from "./StreamViewer";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { DeviceList } from "./DeviceList";
+import { DeviceLayout } from "./DeviceLayout";
 
 export const CameraDashboard = () => {
-  const [socketPort, setSocketPort] = React.useState<number | null>(null);
-  const [streamHost, setStreamHost] = React.useState<string | null>("");
+  const [streamingDevices, setStreamingDevices] = React.useState<
+    { host: string; stream: boolean }[]
+  >([]);
 
-  const stopStreaming = () => {
-    setSocketPort(null);
-    setStreamHost(null);
-  };
-
-  const fetchStreamPort = async (
-    host: string,
-    username: string,
-    password: string
-  ) => {
-    stopStreaming();
-    try {
-      const { hostname, port } = new URL(`http://${host}`);
-      const response = await fetch(`/api/stream`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ hostname, port, username, password }),
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+  const addStreamingDevice = (host: string) => {
+    setStreamingDevices((prevDevices) => {
+      if (prevDevices.some((device) => device.host === host)) {
+        return prevDevices;
       }
 
-      const data = await response.json();
-      setSocketPort(data.port);
-      setStreamHost(data.host);
-      /* console.log(data.host); */
-    } catch (error) {
-      /*  console.error("API 호출 실패:", error); */
-    }
+      return [...prevDevices, { host, stream: false }];
+    });
+  };
+
+  const removeStreamingDevice = (host: string) => {
+    setStreamingDevices((prevDevices) => {
+      if (!prevDevices.some((device) => device.host === host)) {
+        return prevDevices;
+      }
+      return prevDevices.filter((device) => device.host !== host);
+    });
+  };
+
+  const toggleStream = (host: string, stream: boolean) => {
+    setStreamingDevices((prevDevices) =>
+      prevDevices.map((device) =>
+        device.host === host ? { ...device, stream } : device
+      )
+    );
   };
 
   return (
     <div className="flex h-screen">
-      <DeviceList
-        fetchStreamPort={fetchStreamPort}
-        stopStreaming={stopStreaming}
-        streamHost={streamHost}
+      <DndProvider backend={HTML5Backend}>
+        <DeviceList
+          addStreamingDevice={addStreamingDevice}
+          removeStreamingDevice={removeStreamingDevice}
+          streamingDevices={streamingDevices}
+        />
+      </DndProvider>
+
+      <DeviceLayout
+        streamingDevices={streamingDevices}
+        removeStreamingDevice={removeStreamingDevice}
+        toggleStream={toggleStream}
       />
-      <div className="flex-1 p-8 bg-zinc-800 overflow-y-auto">
-        {/*  <div className="grid grid-cols-5 gap-2"></div> */}
-        <StreamViewer port={socketPort!} />
-      </div>
     </div>
   );
 };

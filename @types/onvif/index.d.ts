@@ -10,12 +10,15 @@ declare module "onvif" {
     port?: number;
     xaddrs: (Url & { host: string })[];
 
-    constructor(options: {
-      hostname: string;
-      port: number;
-      username: string;
-      password: string;
-    });
+    constructor(
+      options: {
+        hostname: string;
+        port: number;
+        username: string;
+        password: string;
+      },
+      callback?: (err: Error | null) => void // 에러 콜백 타입 명확히 지정
+    );
 
     connect(callback?: (error?: Error) => void): void;
 
@@ -36,7 +39,16 @@ declare module "onvif" {
         error: Error | null,
         profiles: { $: { token: string } }[]
       ) => void
-    ): void; // getProfiles 메서드 추가
+    ): void;
+    continuousMove(
+      options: { x?: number; y?: number; zoom?: number },
+      callback?: (error: Error | null) => void
+    ): void;
+
+    stop(
+      options: { panTilt?: boolean; zoom?: boolean },
+      callback?: (error: Error | null) => void
+    ): void;
   }
 
   export namespace Discovery {
