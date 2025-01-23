@@ -43,7 +43,7 @@ export const DevicePtz = ({ host }: { host: string }) => {
 
   const handleControl = async (
     action: "pan" | "tilt" | "zoom",
-    speed: number
+    speed: number,
   ) => {
     const response = await ptzControl({
       key: host,
@@ -58,7 +58,7 @@ export const DevicePtz = ({ host }: { host: string }) => {
   };
 
   return (
-    <div className="bg-zinc-900 p-1 text-zinc-500  w-full flex justify-evenly">
+    <div className="flex w-full justify-evenly bg-zinc-900 p-1 text-zinc-500">
       <button
         className="text-3xl hover:text-zinc-400"
         onClick={(e) => {

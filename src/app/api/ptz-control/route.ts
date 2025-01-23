@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     if (!cam) {
       return NextResponse.json(
         { error: "Camera instance not found for the given key." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
           if (err) {
             return NextResponse.json(
               { error: "Failed to execute pan command." },
-              { status: 500 }
+              { status: 500 },
             );
           }
         });
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
           if (err) {
             return NextResponse.json(
               { error: "Failed to execute tilt command." },
-              { status: 500 }
+              { status: 500 },
             );
           }
         });
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           if (err) {
             return NextResponse.json(
               { error: "Failed to execute zoom command." },
-              { status: 500 }
+              { status: 500 },
             );
           }
         });
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       default:
         return NextResponse.json(
           { error: "Invalid PTZ action." },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to control PTZ." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

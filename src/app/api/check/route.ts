@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     if (!key) {
       return NextResponse.json(
         { error: "The key to check was not provided." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -17,19 +17,19 @@ export async function POST(req: NextRequest) {
     if (instance) {
       return NextResponse.json(
         { key, message: `Cam instance exists: ${key}` },
-        { status: 200 }
+        { status: 200 },
       );
     } else {
       return NextResponse.json(
         { message: "Cam instance not found." },
-        { status: 404 }
+        { status: 404 },
       );
     }
   } catch (error) {
     console.error("Error occurred while checking Cam instance:", error);
     return NextResponse.json(
       { error: "An error occurred while checking the Cam instance." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

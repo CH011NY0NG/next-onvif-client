@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     if (!key) {
       return NextResponse.json(
         { error: "The key to be removed was not provided." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -16,13 +16,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { message: `Cam instance successfully removed: ${key}`, key },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error occurred while removing Cam instance:", error);
     return NextResponse.json(
       { error: "An error occurred while removing the Cam instance." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!cam) {
       return NextResponse.json(
         { error: "Camera instance not found for the provided key" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -50,14 +50,15 @@ export async function POST(request: NextRequest) {
             } else {
               const authenticatedRtspUrl = stream.uri.replace(
                 "rtsp://",
-                `rtsp://${cam.username}:${cam.password}@`
+                `rtsp://${cam.username}:${cam.password}@`,
               );
               resolve(authenticatedRtspUrl);
             }
-          }
+          },
         );
       });
     });
+    2;
 
     const decodedRtspUrl = decodeURIComponent(rtspUrl);
     if (streams[decodedRtspUrl]) {
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
 
       io.on("connection", (socket) => {
         console.log(
-          `Client connected ${decodedRtspUrl} on port, ${portNumber}, now connected ${io.engine.clientsCount}`
+          `Client connected ${decodedRtspUrl} on port, ${portNumber}, now connected ${io.engine.clientsCount}`,
         );
 
         const pipeStream = (data: any) => {
@@ -95,13 +96,13 @@ export async function POST(request: NextRequest) {
         socket.on("disconnect", () => {
           stream.removeListener("data", pipeStream);
           console.log(
-            `Client disconnected ${decodedRtspUrl}, now connected ${io.engine.clientsCount}`
+            `Client disconnected ${decodedRtspUrl}, now connected ${io.engine.clientsCount}`,
           );
 
           setTimeout(() => {
             if (io.sockets.sockets.size === 0) {
               console.log(
-                `No clients connected ${decodedRtspUrl}, stopping FFmpeg stream`
+                `No clients connected ${decodedRtspUrl}, stopping FFmpeg stream`,
               );
 
               stream.stop();
@@ -131,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(
       { error: "Failed to fetch data" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

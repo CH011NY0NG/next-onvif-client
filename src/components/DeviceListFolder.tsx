@@ -2,10 +2,16 @@
 
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { DeviceListItem } from "./DeviceListItem";
-import { TiCog, TiTick, TiTimes } from "react-icons/ti";
-import { TbFolder, TbFolderOpen } from "react-icons/tb";
+import { TiTimes } from "react-icons/ti";
+import {
+  TbFolder,
+  TbFolderOpen,
+  TbPencil,
+  TbPencilCheck,
+} from "react-icons/tb";
 import { ItemType } from "@/types/react-dnd";
+import DeviceListItem from "./DeviceListItem";
+import clsx from "clsx";
 
 export const DeviceListFolder = ({
   id,
@@ -20,9 +26,15 @@ export const DeviceListFolder = ({
   deleteItem,
   updateDevice,
   updateFolder,
+  connectDevice,
   addStreamingDevice,
   removeStreamingDevice,
   streamingDevices,
+  connectedDevices,
+  addDevice,
+  removeDevice,
+  fetchStreamPort,
+  resetStreamPort,
 }: {
   id: string;
   index: number;
@@ -37,8 +49,14 @@ export const DeviceListFolder = ({
   updateDevice: (id: string, host: string) => void;
   updateFolder: (id: string, name: string) => void;
   addStreamingDevice: (host: string) => void;
+  connectDevice: (host: string, username: string, password: string) => void;
+  addDevice: (key: string) => Promise<boolean>;
+  removeDevice: (key: string) => void;
   removeStreamingDevice: (host: string) => void;
   streamingDevices: { host: string; stream: boolean }[];
+  connectedDevices: any[];
+  fetchStreamPort: (host: string) => void;
+  resetStreamPort: (host: string) => void;
 }) => {
   const ref = React.useRef<HTMLDivElement | null>(null);
   const [nameInput, setNameInput] = React.useState<string>(name);
@@ -58,6 +76,7 @@ export const DeviceListFolder = ({
       setOpen(false);
       return { id: id, type: "FOLDER", parentId: parentId, index: index };
     },
+    canDrag: () => !onAuth,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -94,13 +113,13 @@ export const DeviceListFolder = ({
         if (mouseY < hoverUpperY) {
           targetIndex = Math.max(
             draggedItem.index! > index ? index : index - 1,
-            0
+            0,
           );
           moveItem(draggedItem.id, targetIndex, parentId);
         } else if (mouseY > hoverLowerY) {
           targetIndex = Math.max(
             draggedItem.index! < index ? index : index + 1,
-            0
+            0,
           );
           moveItem(draggedItem.id, targetIndex, parentId);
         } else {
@@ -149,35 +168,32 @@ export const DeviceListFolder = ({
     }
   }, [items.length]);
 
-  React.useEffect(() => {
-    if (onAuth) {
-      drag(null);
-      drop(null);
-    } else {
-      drag(drop(ref));
-    }
-  }, [onAuth]);
-
+  drag(drop(ref));
   return (
-    <div ref={ref} className=" py-1">
+    <div ref={ref} className="py-1">
       <div
-        className={` rounded  border ${isDragging && "opacity-30"} ${
-          isOverItem ? "bg-zinc-800" : " bg-zinc-900"
-        }  ${isOpen ? "border-zinc-800" : "border-transparent"}`}
+        className={clsx(
+          "rounded",
+          isDragging && "opacity-30",
+          isOverItem ? "bg-zinc-800" : "bg-zinc-900",
+          isOpen ? "border border-zinc-800" : "border border-transparent",
+        )}
       >
-        <div className={`group flex justify-between items-center cursor-move`}>
-          <div className={`flex items-center `}>
+        <div className={`group flex cursor-move items-center justify-between`}>
+          <div className={`flex items-center`}>
             {isOpen ? (
               <TbFolderOpen
-                className={`${
-                  items.length > 0 ? "text-zinc-500" : "text-zinc-700"
-                } text-xl`}
+                className={clsx(
+                  "text-xl",
+                  items.length > 0 ? "text-zinc-500" : "text-zinc-700",
+                )}
               />
             ) : (
               <TbFolder
-                className={`${
-                  items.length > 0 ? "text-zinc-500" : "text-zinc-700"
-                } text-xl`}
+                className={clsx(
+                  "text-xl",
+                  items.length > 0 ? "text-zinc-500" : "text-zinc-700",
+                )}
               />
             )}
             <input
@@ -195,43 +211,43 @@ export const DeviceListFolder = ({
                 }
               }}
               onChange={(e) => setNameInput(e.target.value)}
-              className={`w-full rounded pl-1 pr-2 py-1 font-bold text-sm text-ellipsis whitespace-nowrap overflow-hidden placeholder:text-zinc-500 focus:outline-none ${
-                onAuth ? " bg-zinc-800 " : "cursor-pointer bg-transparent "
+              className={`w-full overflow-hidden text-ellipsis whitespace-nowrap rounded py-1 pl-1 pr-2 text-sm font-bold placeholder:text-zinc-500 focus:outline-none ${
+                onAuth ? "bg-zinc-800" : "cursor-pointer bg-transparent"
               }`}
             />
           </div>
-          {onAuth ? (
-            <button
-              className="text-xl text-zinc-500 hover:text-green-500 mx-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                setAuth(false);
-                updateFolder(id, nameInput);
-              }}
-            >
-              <TiTick />
-            </button>
-          ) : (
-            <div className="flex items-center mx-1">
+
+          <div className="mx-1 flex items-center">
+            {onAuth ? (
+              <button
+                className="text-xl text-zinc-500 hover:text-green-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAuth(false);
+                  updateFolder(id, nameInput);
+                }}
+              >
+                <TbPencilCheck />
+              </button>
+            ) : (
               <button
                 onClick={() => setAuth((prevState) => !prevState)}
                 className="hidden group-hover:block"
               >
-                <TiCog className="text-xl text-zinc-500 hover:text-zinc-400" />
+                <TbPencil className="text-xl text-zinc-500 hover:text-zinc-400" />
               </button>
-
-              <button
-                className="hidden group-hover:block"
-                onClick={() => deleteItem(id)}
-              >
-                <TiTimes className="text-xl text-zinc-500 hover:text-red-600" />
-              </button>
-            </div>
-          )}
+            )}
+            <button
+              className={`group-hover:block ${onAuth ? "block" : "hidden"}`}
+              onClick={() => deleteItem(id)}
+            >
+              <TiTimes className="text-xl text-zinc-500 hover:text-red-600" />
+            </button>
+          </div>
         </div>
 
         {isOpen && (
-          <div className="px-3 pb-1">
+          <div className="px-2 pb-1">
             {items?.map((item, index) =>
               item.type === "FOLDER" ? (
                 <DeviceListFolder
@@ -248,9 +264,15 @@ export const DeviceListFolder = ({
                   deleteItem={deleteItem}
                   updateDevice={updateDevice}
                   updateFolder={updateFolder}
+                  connectDevice={connectDevice}
+                  addDevice={addDevice}
+                  removeDevice={removeDevice}
                   addStreamingDevice={addStreamingDevice}
                   removeStreamingDevice={removeStreamingDevice}
                   streamingDevices={streamingDevices}
+                  connectedDevices={connectedDevices}
+                  fetchStreamPort={fetchStreamPort}
+                  resetStreamPort={resetStreamPort}
                 />
               ) : item.type === "ITEM" ? (
                 <DeviceListItem
@@ -267,15 +289,33 @@ export const DeviceListFolder = ({
                   updateDevice={updateDevice}
                   addStreamingDevice={addStreamingDevice}
                   removeStreamingDevice={removeStreamingDevice}
-                  isSelected={streamingDevices.some(
-                    (device) => device.host === item.name
+                  addDevice={addDevice}
+                  removeDevice={removeDevice}
+                  connectDevice={connectDevice}
+                  fetchStreamPort={fetchStreamPort}
+                  resetStreamPort={resetStreamPort}
+                  isConnected={connectedDevices.some(
+                    (device: { host: string }) => device.host === item.name,
                   )}
+                  isAdded={streamingDevices.some(
+                    (device) => device.host === item.name,
+                  )}
+                  capabilities={
+                    connectedDevices.find(
+                      (device: { host: string }) => device.host === item.name,
+                    )?.capabilities
+                  }
+                  information={
+                    connectedDevices.find(
+                      (device: { host: string }) => device.host === item.name,
+                    )?.deviceInformation
+                  }
                   isStreaming={
                     streamingDevices.find((device) => device.host === item.name)
                       ?.stream ?? false
                   }
                 />
-              ) : null
+              ) : null,
             )}
           </div>
         )}

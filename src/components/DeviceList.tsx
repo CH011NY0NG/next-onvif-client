@@ -1,23 +1,100 @@
 "use client";
 
 import React from "react";
-import { DeviceListItem } from "./DeviceListItem";
 import DeviceListFolder from "./DeviceListFolder";
 import { TbFolderPlus, TbPlus } from "react-icons/tb";
 import { ItemType } from "@/types/react-dnd";
 import { nanoid } from "nanoid";
+import DeviceListItem from "./DeviceListItem";
 
 export const DeviceList = ({
   addStreamingDevice,
   removeStreamingDevice,
   streamingDevices,
+  fetchStreamPort,
+  resetStreamPort,
 }: {
   addStreamingDevice: (host: string) => void;
   removeStreamingDevice: (key: string) => void;
   streamingDevices: { host: string; stream: boolean }[];
+  fetchStreamPort: (host: string) => void;
+  resetStreamPort: (host: string) => void;
 }) => {
   const [items, setItems] = React.useState<ItemType[]>([]);
+  const [connectedDevices, setConnectedDevices] = React.useState<any>([]);
   const [isLoading, setLoading] = React.useState<boolean>(false);
+
+  const connectDevice = async (
+    host: string,
+    username: string,
+    password: string,
+  ) => {
+    const { hostname, port } = new URL(`http://${host}`);
+    const response = await fetch(`/api/connect`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostname, port, username, password }),
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      setConnectedDevices((prevDevices: any[]) => [
+        ...prevDevices.filter((device) => device.host !== data.id),
+        data,
+      ]);
+    } else {
+      console.error("Failed to connect to the device.");
+    }
+  };
+  const removeDevice = async (key: string) => {
+    try {
+      const response = await fetch("/api/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ key }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        removeStreamingDevice(data.key);
+        setConnectedDevices((prevDevices: any[]) =>
+          prevDevices.filter((device) => device.host !== data.key),
+        );
+      } else {
+      }
+    } catch (error) {}
+  };
+
+  const addDevice = async (key: string): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ key }),
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+
+      addStreamingDevice(data.key);
+      return true;
+    } catch (error) {
+      console.error("Error in checkInstance:", error);
+      return false;
+    }
+  };
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +132,7 @@ export const DeviceList = ({
     fetchData();
   }, []);
 
-  const addDevice = () => {
+  const addListItem = () => {
     const uid = nanoid(10);
     const newItem: ItemType = {
       id: uid,
@@ -66,7 +143,7 @@ export const DeviceList = ({
     setItems((prevItems) => [...prevItems, newItem]);
   };
 
-  const addFolder = () => {
+  const addListFolder = () => {
     const uid = nanoid(10);
     const newFolder: ItemType = {
       id: uid,
@@ -81,14 +158,14 @@ export const DeviceList = ({
   const moveItem = (
     draggedItemId: string,
     targetIndex: number,
-    targetParentId: string | null
+    targetParentId: string | null,
   ) => {
     setItems((prevItems) => {
       const updatedItems = [...prevItems];
 
       const findArrayByParentId = (
         array: ItemType[],
-        parentId: string | null
+        parentId: string | null,
       ): ItemType[] | null => {
         if (parentId === null) return array;
         for (const item of array) {
@@ -105,7 +182,7 @@ export const DeviceList = ({
 
       const removeItemById = (
         array: ItemType[],
-        itemId: string
+        itemId: string,
       ): ItemType | null => {
         const index = array.findIndex((item) => item.id === itemId);
         if (index !== -1) {
@@ -147,7 +224,7 @@ export const DeviceList = ({
 
       const removeItemById = (
         array: ItemType[],
-        itemId: string
+        itemId: string,
       ): ItemType | null => {
         const index = array.findIndex((item) => item.id === itemId);
         if (index !== -1) {
@@ -164,7 +241,7 @@ export const DeviceList = ({
 
       const findFolderById = (
         array: ItemType[],
-        folderId: string | null
+        folderId: string | null,
       ): any | null => {
         for (const item of array) {
           if (item.id === folderId && item.type === "FOLDER") {
@@ -199,7 +276,7 @@ export const DeviceList = ({
 
   const isParentChildRelationship = (
     parentId: string,
-    childId: string
+    childId: string,
   ): boolean => {
     const findItemById = (array: ItemType[], id: string): ItemType | null => {
       for (const item of array) {
@@ -303,7 +380,7 @@ export const DeviceList = ({
   };
 
   const Loading = () => (
-    <div className="flex justify-center space-x-2 mt-2">
+    <div className="mt-2 flex justify-center space-x-2">
       <style>
         {`
           @keyframes bounce {
@@ -316,22 +393,22 @@ export const DeviceList = ({
         `}
       </style>
       <div
-        className="w-3 h-3 bg-zinc-800 rounded-full bounce-animation"
+        className="bounce-animation h-3 w-3 rounded-full bg-zinc-800"
         style={{ animationDelay: "0s" }}
       ></div>
       <div
-        className="w-3 h-3 bg-zinc-800 rounded-full bounce-animation"
+        className="bounce-animation h-3 w-3 rounded-full bg-zinc-800"
         style={{ animationDelay: "0.2s" }}
       ></div>
       <div
-        className="w-3 h-3 bg-zinc-800 rounded-full bounce-animation"
+        className="bounce-animation h-3 w-3 rounded-full bg-zinc-800"
         style={{ animationDelay: "0.4s" }}
       ></div>
     </div>
   );
 
   return (
-    <aside className="flex flex-col space-y-3 w-[260px] bg-zinc-900 px-5 py-4 overflow-y-auto">
+    <aside className="flex w-[280px] flex-col space-y-3 overflow-y-auto bg-zinc-900 px-5 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <p className="text-2xl font-bold">Device</p>
@@ -340,25 +417,23 @@ export const DeviceList = ({
         <div>
           <button
             disabled={!isLoading}
-            onClick={addDevice}
-            className={`text-2xl   ${
+            onClick={addListItem}
+            className={`text-2xl ${
               isLoading
                 ? "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400"
                 : "text-zinc-700"
-            }  p-1 rounded-2xl    
-            `}
+            } rounded-2xl p-1`}
           >
             <TbPlus />
           </button>
           <button
             disabled={!isLoading}
-            onClick={addFolder}
-            className={`text-2xl   ${
+            onClick={addListFolder}
+            className={`text-2xl ${
               isLoading
                 ? "text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400"
                 : "text-zinc-700"
-            }  p-1 rounded-2xl    
-            `}
+            } rounded-2xl p-1`}
           >
             <TbFolderPlus />
           </button>
@@ -366,7 +441,7 @@ export const DeviceList = ({
       </div>
       {!isLoading && <Loading />}
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         {items.map((item, index) =>
           item.type === "FOLDER" ? (
             <DeviceListFolder
@@ -383,9 +458,15 @@ export const DeviceList = ({
               deleteItem={deleteItem}
               updateDevice={updateDevice}
               updateFolder={updateFolder}
+              removeDevice={removeDevice}
+              addDevice={addDevice}
+              connectDevice={connectDevice}
               addStreamingDevice={addStreamingDevice}
               removeStreamingDevice={removeStreamingDevice}
               streamingDevices={streamingDevices}
+              connectedDevices={connectedDevices}
+              fetchStreamPort={fetchStreamPort}
+              resetStreamPort={resetStreamPort}
             />
           ) : item.type === "ITEM" ? (
             <DeviceListItem
@@ -402,15 +483,33 @@ export const DeviceList = ({
               updateDevice={updateDevice}
               addStreamingDevice={addStreamingDevice}
               removeStreamingDevice={removeStreamingDevice}
-              isSelected={streamingDevices.some(
-                (device) => device.host === item.name
+              addDevice={addDevice}
+              removeDevice={removeDevice}
+              connectDevice={connectDevice}
+              fetchStreamPort={fetchStreamPort}
+              resetStreamPort={resetStreamPort}
+              isConnected={connectedDevices.some(
+                (device: { host: string }) => device.host === item.name,
+              )}
+              isAdded={streamingDevices.some(
+                (device) => device.host === item.name,
               )}
               isStreaming={
                 streamingDevices.find((device) => device.host === item.name)
                   ?.stream ?? false
               }
+              capabilities={
+                connectedDevices.find(
+                  (device: { host: string }) => device.host === item.name,
+                )?.capabilities
+              }
+              information={
+                connectedDevices.find(
+                  (device: { host: string }) => device.host === item.name,
+                )?.deviceInformation
+              }
             />
-          ) : null
+          ) : null,
         )}
       </div>
     </aside>
